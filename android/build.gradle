@@ -1,0 +1,30 @@
+buildscript {
+    ext {
+        buildToolsVersion = "35.0.0"
+        minSdkVersion = 24
+        compileSdkVersion = 35
+        targetSdkVersion = 35
+        ndkVersion = "27.1.12297006"
+        kotlinVersion = "2.0.21"
+    }
+    repositories {
+        google()  // Bu satır CRITICAL - Firebase için gerekli
+        mavenCentral()
+    }
+    dependencies {
+        // DİKKAT: Sürüm numaralarını eklemelisiniz
+        classpath("com.android.tools.build:gradle:8.3.2") // Android Gradle Plugin
+        classpath("com.facebook.react:react-native-gradle-plugin:0.74.2") // React Native
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("com.google.gms:google-services:4.4.2") // Firebase - Değişiklik burada
+    }
+}
+
+allprojects {
+    repositories {
+        google()  // Bu da CRITICAL
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.facebook.react.rootproject"
