@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1055340131160",
+    "project_id": "fir-13893",
+    "storage_bucket": "fir-13893.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1055340131160:android:d534fcf039de451231eb2d",
+        "android_client_info": {
+          "package_name": "com.acne_detect_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKCvcZVkvA2grqZXFPbf2iZILPlovFe_o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
