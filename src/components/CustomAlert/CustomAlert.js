@@ -16,7 +16,7 @@ const CustomAlert = ({ visible, type = 'info', message, onClose, children }) => 
           <Text style={styles.message}>{message}</Text>
           {children}
           <Button
-            title="Okey"
+            title="Okay"
             onPress={onClose}
             style={{ width: 100, height: 44 }}
           />

@@ -29,10 +29,9 @@ import cameraIcon from '../../../assets/camera.png';
 import logout from '../../../assets/logout.png';
 import gallery from '../../../assets/gallery.png';
 
-const avatarOptions = {avatar1, avatar2, avatar3};
+import { API_KEY, API_SECRET } from '@env';
 
-const API_KEY = 'XrYtRhKyoSMY0DOo25BacBvetXI9wDqU';
-const API_SECRET = '0aLsdX1tj_oAWZ-2rNxIehWk7DDaHMFt';
+const avatarOptions = {avatar1, avatar2, avatar3};
 
 const Home = ({navigation}) => {
   const [firstName, setFirstName] = useState('');
@@ -64,7 +63,7 @@ const Home = ({navigation}) => {
           }
         }
       } catch (error) {
-        console.error('Kullanıcı verisi alınamadı:', error);
+        console.error('Failed to fetch user data:', error);
       }
     })();
   }, []);
@@ -76,9 +75,9 @@ const Home = ({navigation}) => {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.CAMERA,
         {
-          title: 'Kamera İzni',
-          message: 'Fotoğraf çekmek için kamera izni gerekli',
-          buttonPositive: 'Tamam',
+          title: 'Camera Permission',
+          message: 'Camera permission is required to take photos',
+          buttonPositive: 'OK',
         },
       );
       return granted === PermissionsAndroid.RESULTS.GRANTED;
@@ -92,14 +91,14 @@ const Home = ({navigation}) => {
     try {
       return await RNFS.readFile(uri, 'base64');
     } catch (error) {
-      console.error('Base64 dönüşüm hatası:', error);
+      console.error('Base64 conversion error:', error);
       return null;
     }
   };
 
   const analyzeSkin = async base64Image => {
     setLoadingAnalysis(true);
-    setAlertMessage('Analiz yapılıyor...');
+    setAlertMessage('Analyzing...');
     setAlertType('info');
     setAlertVisible(true);
 
@@ -119,22 +118,22 @@ const Home = ({navigation}) => {
       );
 
       const data = await response.json();
-      console.log('API’den gelen cilt analizi verisi:', data);
+      console.log('Skin analysis data from API:', data);
 
       if (data.error_message) {
         setAlertType('error');
-        setAlertMessage(`API Hatası: ${data.error_message}`);
+        setAlertMessage(`API Error: ${data.error_message}`);
         return null;
       }
 
       setSkinAnalysisResult(data);
       setAlertType('success');
-      setAlertMessage('Cilt analizi tamamlandı.');
+      setAlertMessage('Skin analysis completed.');
       return data;
     } catch (error) {
       setAlertType('error');
-      setAlertMessage('Analiz sırasında bir hata oluştu.');
-      console.error('API çağrısı hatası:', error);
+      setAlertMessage('An error occurred during analysis.');
+      console.error('API call error:', error);
       return null;
     } finally {
       setLoadingAnalysis(false);
@@ -156,14 +155,14 @@ const Home = ({navigation}) => {
 
     const {uri, width, height, base64} = asset;
 
-    // Minimum boyut kontrolü
+    // Minimum size check
     const MIN_WIDTH = 200;
     const MIN_HEIGHT = 200;
 
     if (width < MIN_WIDTH || height < MIN_HEIGHT) {
       setAlertType('error');
       setAlertMessage(
-        `Resim boyutu çok küçük. Minimum ${MIN_WIDTH}x${MIN_HEIGHT} olmalı.`,
+        `Image size is too small. Minimum size is ${MIN_WIDTH}x${MIN_HEIGHT}.`,
       );
       setAlertVisible(true);
       return;
@@ -171,24 +170,24 @@ const Home = ({navigation}) => {
 
     if (!base64) {
       setAlertType('error');
-      setAlertMessage('Base64 formatında veri alınamadı.');
+      setAlertMessage('Failed to get data in base64 format.');
       setAlertVisible(true);
       return;
     }
 
     setPhotoUri(uri);
     setAlertMessage(
-      asset.sourceURL ? 'Galeriden fotoğraf seçildi.' : 'Fotoğraf çekildi.',
+      asset.sourceURL ? 'Photo selected from gallery.' : 'Photo taken.',
     );
     setAlertVisible(true);
 
-    // API'ye direkt base64 kodu gönderiyoruz (prefix olmadan)
+    // Send base64 string (without prefix) directly to API
     await analyzeSkin(base64);
   };
 
   const openCamera = async () => {
     if (!(await requestCameraPermission())) {
-      Alert.alert('İzin Reddedildi', 'Kamera izni gerekli.');
+      Alert.alert('Permission Denied', 'Camera permission is required.');
       return;
     }
 
@@ -231,33 +230,33 @@ const Home = ({navigation}) => {
       await auth.signOut();
       navigation.replace('Login');
     } catch (error) {
-      console.error('Çıkış hatası:', error);
-      Alert.alert('Hata', 'Çıkış işlemi başarısız oldu.');
+      console.error('Logout error:', error);
+      Alert.alert('Error', 'Logout failed.');
     }
   };
 
-  // Acne seviyesi ve confidence değerine göre mesaj oluşturma fonksiyonu
+  // Create message based on acne level and confidence
   const getAcneLevelLabel = acneData => {
     const {confidence, value} = acneData;
 
-    // Confidence değeri sadece yorumlama için
-    // Kullanıcıya sadece şiddet seviyesini göster
+    // Confidence value is just for interpretation
+    // Show only severity level to user
     return mapAcneValue(value);
   };
 
   const mapAcneValue = value => {
     switch (value) {
       case 0:
-        return 'Yok';
+        return 'None';
       case 1:
       case 2:
-        return 'Orta';
+        return 'Moderate';
       case 3:
-        return 'Şiddetli';
+        return 'Severe';
       case 4:
-        return 'Çok Şiddetli';
+        return 'Very Severe';
       default:
-        return `Tanımsız seviye (${value})`;
+        return `Undefined level (${value})`;
     }
   };
 
@@ -307,14 +306,14 @@ const Home = ({navigation}) => {
           )}
 
           {loadingAnalysis && (
-            <Text style={{marginTop: 10}}>Analiz yapılıyor...</Text>
+            <Text style={{marginTop: 10}}>Analyzing...</Text>
           )}
           {!loadingAnalysis && skinAnalysisResult?.result?.acne && (
             <View style={styles.analysisContainer}>
-              <Text style={styles.analysisTitle}>Cilt Analiz Sonucu</Text>
+              <Text style={styles.analysisTitle}>Skin Analysis Result</Text>
               <View style={styles.resultBox}>
                 <Text style={styles.resultLabel}>
-                  Sivilce Seviyesi:{' '}
+                  Acne Level:{' '}
                   {getAcneLevelLabel(skinAnalysisResult.result.acne)}
                 </Text>
               </View>
@@ -336,7 +335,7 @@ const Home = ({navigation}) => {
                 source={cameraIcon}
                 style={{width: 24, height: 24, marginRight: 10}}
               />
-              <Text>Kamera</Text>
+              <Text>Camera</Text>
             </View>
           </TouchableOpacity>
           <TouchableOpacity
@@ -347,7 +346,7 @@ const Home = ({navigation}) => {
                 source={gallery}
                 style={{width: 24, height: 24, marginRight: 10}}
               />
-              <Text>Galeri</Text>
+              <Text>Gallery</Text>
             </View>
           </TouchableOpacity>
         </CustomAlert>
