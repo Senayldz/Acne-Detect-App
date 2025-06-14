@@ -1,31 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, Alert, ScrollView, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+} from 'react-native';
 import axios from 'axios';
 import styles from './ChatScreen.style';
-
-const OPENAI_API_KEY = '...';
-
-const ParsedText = ({ text }) => {
-  const parts = text.split(/(https?:\/\/[^\s]+)/g);
-
-  return (
-    <Text style={styles.responseText}>
-      {parts.map((part, index) =>
-        part.startsWith('http') ? (
-          <Text
-            key={index}
-            style={styles.linkText}
-            onPress={() => Linking.openURL(part)}
-          >
-            {part}
-          </Text>
-        ) : (
-          part
-        ),
-      )}
-    </Text>
-  );
-};
+import ParsedText from './ParsedText';
+import { OPENAI_API_KEY } from '@env';
 
 const ChatScreen = ({ route }) => {
   const { analysisResult } = route.params;
@@ -62,7 +46,7 @@ Please provide the response in English.`;
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${OPENAI_API_KEY}`,
               },
-            },
+            }
           );
 
           const reply = res.data.choices?.[0]?.message?.content;
@@ -71,7 +55,7 @@ Please provide the response in English.`;
           console.error('OpenAI API error:', error);
           Alert.alert(
             'Error',
-            'An error occurred while fetching product recommendations. Please try again.',
+            'An error occurred while fetching product recommendations. Please try again.'
           );
           setResponseText('An error occurred. No response received.');
         } finally {
