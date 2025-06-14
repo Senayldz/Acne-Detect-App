@@ -29,7 +29,7 @@ import cameraIcon from '../../../assets/camera.png';
 import logout from '../../../assets/logout.png';
 import gallery from '../../../assets/gallery.png';
 
-import { API_KEY, API_SECRET } from '@env';
+import {API_KEY, API_SECRET} from '@env';
 
 const avatarOptions = {avatar1, avatar2, avatar3};
 
@@ -44,7 +44,6 @@ const Home = ({navigation}) => {
   const [skinAnalysisResult, setSkinAnalysisResult] = useState(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
 
-  // Fetch user data once on mount
   useEffect(() => {
     (async () => {
       try {
@@ -70,7 +69,6 @@ const Home = ({navigation}) => {
 
   const requestCameraPermission = async () => {
     if (Platform.OS !== 'android') return true;
-
     try {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.CAMERA,
@@ -84,15 +82,6 @@ const Home = ({navigation}) => {
     } catch (error) {
       console.warn(error);
       return false;
-    }
-  };
-
-  const convertToBase64 = async uri => {
-    try {
-      return await RNFS.readFile(uri, 'base64');
-    } catch (error) {
-      console.error('Base64 conversion error:', error);
-      return null;
     }
   };
 
@@ -118,8 +107,6 @@ const Home = ({navigation}) => {
       );
 
       const data = await response.json();
-      console.log('Skin analysis data from API:', data);
-
       if (data.error_message) {
         setAlertType('error');
         setAlertMessage(`API Error: ${data.error_message}`);
@@ -141,12 +128,7 @@ const Home = ({navigation}) => {
   };
 
   const handleImagePick = async response => {
-    if (response.didCancel) {
-      console.log('User cancelled image picker');
-      return;
-    }
-    if (response.errorCode) {
-      console.log('ImagePicker Error: ', response.errorMessage);
+    if (response.didCancel || response.errorCode) {
       return;
     }
 
@@ -154,8 +136,6 @@ const Home = ({navigation}) => {
     if (!asset) return;
 
     const {uri, width, height, base64} = asset;
-
-    // Minimum size check
     const MIN_WIDTH = 200;
     const MIN_HEIGHT = 200;
 
@@ -176,12 +156,9 @@ const Home = ({navigation}) => {
     }
 
     setPhotoUri(uri);
-    setAlertMessage(
-      asset.sourceURL ? 'Photo selected from gallery.' : 'Photo taken.',
-    );
+    setAlertMessage(asset.sourceURL ? 'Photo selected from gallery.' : 'Photo taken.');
     setAlertVisible(true);
 
-    // Send base64 string (without prefix) directly to API
     await analyzeSkin(base64);
   };
 
@@ -190,25 +167,19 @@ const Home = ({navigation}) => {
       Alert.alert('Permission Denied', 'Camera permission is required.');
       return;
     }
-
     launchCamera({mediaType: 'photo', includeBase64: true}, handleImagePick);
   };
 
   const openGallery = () => {
-    launchImageLibrary(
-      {mediaType: 'photo', includeBase64: true},
-      handleImagePick,
-    );
+    launchImageLibrary({mediaType: 'photo', includeBase64: true}, handleImagePick);
   };
 
   const handleScan = () => {
-    // Reset states before opening options
     setAlertVisible(false);
     setAlertMessage('');
     setPhotoUri(null);
     setSkinAnalysisResult(null);
     setLoadingAnalysis(false);
-
     setShowScanOptions(true);
   };
 
@@ -217,6 +188,7 @@ const Home = ({navigation}) => {
     setAlertMessage('');
     setPhotoUri(null);
     setSkinAnalysisResult(null);
+    navigation.navigate('ChatScreen', {analysisResult: skinAnalysisResult});
   };
 
   const handleOptionSelect = option => {
@@ -235,13 +207,8 @@ const Home = ({navigation}) => {
     }
   };
 
-  // Create message based on acne level and confidence
   const getAcneLevelLabel = acneData => {
-    const {confidence, value} = acneData;
-
-    // Confidence value is just for interpretation
-    // Show only severity level to user
-    return mapAcneValue(value);
+    return mapAcneValue(acneData.value);
   };
 
   const mapAcneValue = value => {
@@ -263,7 +230,6 @@ const Home = ({navigation}) => {
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Header Section */}
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Hello {firstName} 👋</Text>
@@ -281,7 +247,6 @@ const Home = ({navigation}) => {
           </View>
         </View>
 
-        {/* Scan Your Face Button */}
         <Button
           title="Scan Your Face"
           onPress={handleScan}
@@ -291,12 +256,13 @@ const Home = ({navigation}) => {
           iconStyle={{width: 24, height: 24}}
         />
 
-        {/* Analysis Result Alert */}
         <CustomAlert
           visible={alertVisible}
           type={alertType}
           message={alertMessage}
-          onClose={closeAnalysisAlert}>
+          onClose={closeAnalysisAlert}
+          showButton={!!skinAnalysisResult}
+        >
           {photoUri && (
             <Image
               source={{uri: photoUri}}
@@ -305,23 +271,20 @@ const Home = ({navigation}) => {
             />
           )}
 
-          {loadingAnalysis && (
-            <Text style={{marginTop: 10}}>Analyzing...</Text>
-          )}
+          {loadingAnalysis && <Text style={{marginTop: 10}}>Analyzing...</Text>}
+
           {!loadingAnalysis && skinAnalysisResult?.result?.acne && (
             <View style={styles.analysisContainer}>
               <Text style={styles.analysisTitle}>Skin Analysis Result</Text>
               <View style={styles.resultBox}>
                 <Text style={styles.resultLabel}>
-                  Acne Level:{' '}
-                  {getAcneLevelLabel(skinAnalysisResult.result.acne)}
+                  Acne Level: {getAcneLevelLabel(skinAnalysisResult.result.acne)}
                 </Text>
               </View>
             </View>
           )}
         </CustomAlert>
 
-        {/* Scan Options Alert */}
         <CustomAlert
           visible={showScanOptions}
           type="info"
@@ -331,10 +294,7 @@ const Home = ({navigation}) => {
             onPress={() => handleOptionSelect('camera')}
             style={{marginVertical: 10, alignSelf: 'stretch'}}>
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <Image
-                source={cameraIcon}
-                style={{width: 24, height: 24, marginRight: 10}}
-              />
+              <Image source={cameraIcon} style={{width: 24, height: 24, marginRight: 10}} />
               <Text>Camera</Text>
             </View>
           </TouchableOpacity>
@@ -342,10 +302,7 @@ const Home = ({navigation}) => {
             onPress={() => handleOptionSelect('gallery')}
             style={{marginVertical: 10, alignSelf: 'stretch'}}>
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <Image
-                source={gallery}
-                style={{width: 24, height: 24, marginRight: 10}}
-              />
+              <Image source={gallery} style={{width: 24, height: 24, marginRight: 10}} />
               <Text>Gallery</Text>
             </View>
           </TouchableOpacity>
